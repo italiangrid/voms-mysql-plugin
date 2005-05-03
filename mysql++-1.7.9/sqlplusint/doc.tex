@@ -1,0 +1,164 @@
+[!autolink]
+
+[foreach class]
+\section
+\label
+
+[if templ]template [endif] [if struct]struct[endif][else][if union]union[endif][else]class[endelse][endelse] \textbf[templ]
+
+[if parents]\textbf [parents][endif]
+
+[if with_class][if with_class != [class]]
+  \textbf [with_class]   (\ref)
+[endif][endif]
+
+[if brief]\textit[endif]
+
+[detail]
+
+\subsection
+
+[if public]
+\textbf
+\begin
+[foreach public]
+\item [if pure]pure [endif][type] \textbf   [if func]     ([args]) [if const] const [endif]     [if throws] throws [throwclass]([throwargs])[endif]   [endif]   [if enum] [lb][args][rb] [endif]   [if detail] (\ref) [endif]   [if brief] - \textit[endif] [next]
+
+\end
+[endif]
+
+[if protected]
+\textbf
+\begin
+
+[foreach protected]
+\item [if pure]pure [endif][type] \textbf   [if func]     ([args]) [if const] const [endif]     [if throws] throws [throwclass]([throwargs])[endif]   [endif]   [if enum] [lb][args][rb] [endif]   [if detail] (\ref) [endif]   [if brief] - \textit[endif] [next]
+
+\end
+[endif]
+
+[nobreak]
+[foreach func]
+[if with_class == [class]]
+[if !l1][def l1]
+    \textbf [n]
+    [n]
+    \begin [n]
+[endif]
+\item [type] \textbf ([args]) 
+    [if throws] throws [throwclass]([throwargs]) [endif] 
+    [if brief] -  \textit[endif] [n]
+[endif]
+[next]
+[if l1] [undef l1]
+  \end [n]
+[endif]
+[endnobreak]
+
+[nobreak]
+[foreach typedef]
+[if with_class == [class]]
+  [if !l1] [def l1]
+    \textbf [n]
+    [n]
+    \begin [n]
+  [endif]
+\item [if typedef]typedef [endif][if enum]enum [endif][type] \textbf
+  [if enum] [lb][args][rb] [endif]
+  [if brief] - \textit[endif] [n]
+[endif]
+[next]
+[if l1] [undef l1]
+  \end [n]
+[endif]
+[endnobreak]
+
+[nobreak]
+[def pclass [class]]
+[foreach class]
+[if with_class == [pclass]] [if with_class != [class]]
+[if !l1] [def l1]	
+  \textbf [n]
+  [n]
+  \begin [n]
+[endif]
+\item [if templ]template [endif] 
+  [if struct]struct[endif][else][if union]union[endif][else]class[endelse][endelse] 
+    \textbf[templ] 
+    (\ref) 
+    [if brief] - \textit [endif] [n]
+[endif] [endif]
+[next]
+[if l1] [undef l1]
+  \end [n]
+[endif]
+[undef pclass]
+[endnobreak]
+
+[foreach public]
+[if detail]
+\subsection
+\label
+
+  [if pure]pure [endif][type] \textbf   [if func]     ([args]) [if const] const [endif]     [if throws] throws [throwclass]([throwargs])[endif]   [endif]   [if enum] [lb][args][rb] [endif]
+
+[if brief]\textit[endif]
+
+[detail]
+
+[endif]
+
+[next]
+
+[foreach func][if with_class == [class]][// ][if detail]
+\subsection
+
+[type] \textbf ([args])   [if throws] throws [throwclass]([throwargs]) [endif]
+
+[if brief]\textit[endif]
+
+[detail]
+
+[endif][endif][next]
+
+[next]
+
+
+\section
+
+[foreach func][if !with_class]
+[if !f1] [def f1]
+  \textbf
+  \begin
+[endif]
+\item [type] \textbf ([args])   [if throws] throws [throwclass]([throwargs]) [endif]   [if brief] -  \textit[endif] 
+[endif][next]
+[if f1] [undef f1]
+\end
+[endif]
+
+[foreach typedef][if !with_class]
+[if !tl] [def tl]
+  \textbf
+  \begin
+[endif]
+\item [if typedef]typedef [endif][if enum]enum [endif][type] \textbf
+  [if enum] [lb][args][rb] [endif]
+  [if brief] - \textit[endif]
+[endif][next]
+[if tl] [undef tl]
+\end
+[endif]
+
+[foreach func]
+[if detail][if !with_class]
+\subsection
+
+[type] \textbf ([args])   [if throws] throws [throwclass]([throwargs]) [endif]
+
+[if brief]\textit[endif]
+
+[detail]
+
+[endif][endif]
+[next]

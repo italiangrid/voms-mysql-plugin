@@ -1,0 +1,74 @@
+This is C++ API  library for MySQL.
+
+Starting based of 1.2, this is now maintained by sinisa@mysql.com
+as kevinatk@home.com doesn't have time to support this library anymore. 
+
+He has made sinisa@mysql.com a new official maintainer, which will
+continue to keep mysql++ library under LGPL.
+
+
+Since October 1999, all maintenance has been transferred to Sinisa
+Milivojevic (sinisa@mysql.com).
+
+Send your feedback to this address, or even better to the
+mailing list mysql-plusplus@lists.mysql.com.
+
+Since versin 1.1, mysql++ has been prepared to be built with automake and
+autoconf. 
+
+This will make compilation and  installation much easier. 
+
+You should cd to the root of source directory and run :
+automake
+autoconf
+./configure.
+
+If you are running it several times, because you have problems, do delete 
+config.cache. In case of the problem config.log contains more info on
+it's whereabouts.
+
+After configure is run, config.h and Makefiles are generated. 
+
+If you wish to install mysql++ in a root directory other then /usr/local,
+you should run configure with --with-prefix=.....
+
+Configure script and manual. contains description of other switches 
+available.
+
+After running configure, run make and make install. Libs will be
+installed in prefix/lib and include files in prefix/include/mysql++.
+
+Since version 1.3 of mysql++, it can no longer be compiled  and built by GNU
+compilers older then 2.95. Since version 1.3, mysql++ has been changed to
+accomodate changes in 2.95 on various aspects of C++. This prevents it's
+building with earlier versions of GNU , like 2.7.xx, 2.8.xx. Also building
+by egcs compilers 1.x.x is not supported any more. Although with some
+changes in code mysql++ could be built with earlier compilers, running of
+such programs would result in their crashing.
+
+
+It was also noted that on certain SPARC Solaris installation, C++ exceptions
+did not work with gcc 2.95.2.
+
+This case was tested and it is established that mysql++ builds and runs
+flawlessly with a following version of gcc on Solaris:
+
+gcc version 2.95 19990728 (release)
+
+
+Also gcc 2.96 and 2.95.3 have too many problems that they could be used with
+MySQL++. 2.95.3 has problems with C++ exceptions, but this has yet to be
+fully tested.
+
+There are separate versions of MySQL++ for Borland C++ 5.*, VC 6.0 and for
+Compaq compilers versions 6.2 and 6.3.
+
+Integration of the above versions is in progress.
+
+
+Recommended building of library and examples is the following one:
+automake
+autoconf
+./configure --with-options-of-your-choice
+make
+make install
