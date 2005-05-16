@@ -5,7 +5,9 @@ libmysqlplus_la_SOURCES = coldata.cc connection.cc datetime.cc field_names.cc \
 	field_types.cc manip.cc query.cc result.cc  set.cc sql_query.cc \
 	type_info.cc vallist.cc string_util.cc
 
-libmysqlplus_la_LDFLAGS = -version-info $(SQLPLUS_MAJOR_VERSION):$(SQLPLUS_MINOR_VERSION):$(SQLPLUS_MICRO_VERSION)
+libmysqlplus_la_LIBADD = $(MYSQL_LIBS)
+
+libmysqlplus_la_LDFLAGS = -version-info $(SQLPLUS_MAJOR_VERSION):$(SQLPLUS_MINOR_VERSION):$(SQLPLUS_MICRO_VERSION) 
 
 EXTRA_DIST = custom.pl sqlplus.hh coldata1.hh coldata2.hh coldata3.hh coldata4.hh \
 	compare1.hh compare2.hh compare3.hh connection0.hh connection1.hh \
