@@ -47,7 +47,7 @@ AC_CHECK_FUNCS([strtol strtoul strtoull])
 
 # Dependencies checks
 have_mysql=no
-AC_MYSQL([4.0.11], [4.0.20], have_mysql=yes, have_mysql=no)
+AC_MYSQL([4.0.11], [4.1.11], have_mysql=yes, have_mysql=no)
 AC_MSG_RESULT(["MySQL found $have_mysql"])
 
 AC_GLITE
