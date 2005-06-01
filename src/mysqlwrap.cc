@@ -17,6 +17,16 @@
 #include <string>
 #include <iostream>
 
+#define CATCH \
+catch (BadQuery& bq) \
+{ \
+  throw sqliface::DBEXC(bq.error); \
+} \
+catch (...) \
+{ \
+  throw sqliface::DBEXC(); \
+} \
+
 static ResUse dummy;
 
 namespace bsq {
@@ -34,24 +44,14 @@ myinterface::myinterface(const char *dbname,
     Query q = con.query();
     q << "SET AUTOCOMMIT = 0;";
     q.use();
-  } 
-  catch (BadQuery& bq) 
-  {
-    std::cout << bq.error << std::endl;
-    throw sqliface::DBEXC(bq.error);
-  } 
-  catch (...) 
-  {
-    throw sqliface::DBEXC();
   }
-  err = 0;
-
+  CATCH
 }
 
-myinterface::myinterface() : con(true), err(0) {}
+  myinterface::myinterface() : con(true), err(0) {}
 
 
-myinterface::~myinterface(void) {}
+  myinterface::~myinterface(void) {}
 
 int myinterface::error(void) const
 {
@@ -68,15 +68,7 @@ void myinterface::connect(const char *dbname, const char *hostname, const char *
     q << "SET AUTOCOMMIT = 0;";
     q.use();
   } 
-  catch (BadQuery& bq) 
-  {
-    std::cout << bq.error << std::endl;
-    throw sqliface::DBEXC(bq.error);
-  } 
-  catch (...) 
-  {
-    throw sqliface::DBEXC();
-  }
+  CATCH
   err = 0;
 }
 
@@ -116,15 +108,7 @@ void myquery::exec(void)
   {
     (void)q.use();
   } 
-  catch (BadQuery& bq) 
-  {
-    std::cout << bq.error << std::endl;
-    throw sqliface::DBEXC(bq.error);
-  }
-  catch (...) 
-  {
-    throw sqliface::DBEXC();
-  }
+  CATCH
 }
 
 int myquery::error(void) const
@@ -150,15 +134,7 @@ myresults::myresults(Query *q) : value(true)
     if (row == Row())
       value = false;
   } 
-  catch (BadQuery& bq) 
-  {
-    std::cout << bq.error << std::endl;
-    throw sqliface::DBEXC(bq.error);
-  }
-  catch (...) 
-  {
-    throw sqliface::DBEXC();
-  }
+  CATCH
 }
 
 bool myresults::next(void)
@@ -169,10 +145,7 @@ bool myresults::next(void)
     if (row == Row())
       value = false;
   } 
-  catch (...) 
-  {
-    throw sqliface::DBEXC();
-  }
+  CATCH
   return value;
 }
 
