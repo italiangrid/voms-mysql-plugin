@@ -21,14 +21,6 @@ AC_PROG_LIBTOOL
 # Checks for libraries.
 AC_CHECK_LIB([mysqlclient], [main])
 
-SQLPLUSVERSION=1.7.0
-SQLPLUS_MAJOR_VERSION=[`expr $SQLPLUSVERSION : '\([0-9][0-9]*\)'`]
-AC_SUBST(SQLPLUS_MAJOR_VERSION)
-SQLPLUS_MINOR_VERSION=[`expr $SQLPLUSVERSION : '[0-9][0-9]*\.\([0-9][0-9]*\)'`]
-AC_SUBST(SQLPLUS_MINOR_VERSION)
-SQLPLUS_MICRO_VERSION=[`expr $SQLPLUSVERSION : '[0-9][0-9]*\.[0-9][0-9]*\.\([0-9][0-9]*\)'`]
-AC_SUBST(SQLPLUS_MICRO_VERSION)
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h])
@@ -55,8 +47,6 @@ AC_GLITE
 AM_CONFIG_HEADER([src/autogen/config.h])
 AC_CONFIG_FILES([Makefile
 		 config/Makefile
-                 mysql++-1.7.9/Makefile
-                 mysql++-1.7.9/sqlplusint/Makefile
                  src/Makefile])
 
 AC_OUTPUT

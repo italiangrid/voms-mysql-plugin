@@ -11,13 +11,14 @@
  * follows.
  *
  *********************************************************************/
-#include <iterator>
-#include <string>
-#include <list>
-
-#include <sqlplus.hh>
 
 #include "dbwrap.h"
+
+#include <string>
+
+extern "C" {
+#include <mysql.h>
+}
 
 namespace bsq {
 
@@ -46,12 +47,13 @@ public:
 
 private:
 
-  myresults(Query *);
+  myresults(MYSQL_RES * res);
+  //myresults(MYSQL * mysql);
   myresults();
-  myresults(myresults const &);
+  myresults(const myresults& other);
 
-  Row row;
-  ResUse res;
+  MYSQL_RES * result;
+  MYSQL_ROW row;
   bool value;
 
 };
@@ -60,29 +62,27 @@ class myquery : public sqliface::query
 {
 
 public:
-
-  friend class myiterator;
+ 
   friend class myinterface;
   
-  myquery(const myquery &);
+  myquery(const myquery& other);
   ~myquery();
   
   sqliface::query &operator<<(std::string);
-
-  // query execution
 
   sqliface::results *result(void);
   void exec(void);
   
   int  error(void) const;
-
+  
 private:
 
   myquery();
   myquery(myinterface&);
+
   std::string query_text;
-  Connection *c;
-  Query q;
+  MYSQL * mysql;
+  int err;
 
 };
 
@@ -94,18 +94,30 @@ class myinterface : public sqliface::interface
 public:
 
   myinterface();
-  myinterface(const char *, const char *, const char *, const char *);
-  ~myinterface(void);
-  int error(void) const;
-  void connect(const char *, const char *, const char *, const char *);
-  sqliface::query *newquery();
 
-private:
+  myinterface(const char * dbname,
+              const char * hostname,
+              const char * user,
+              const char * password);
+
+  ~myinterface(void);
+
+  void connect(const char * dbname, 
+               const char * hostname, 
+               const char * user, 
+               const char * password);
+  
+  int error(void) const;
+
+  sqliface::query * newquery();
+
+ private:
 
   myinterface(const myinterface &);
-  Connection con;
+  
+  MYSQL * mysql;
   int err;
-
+  
 };
 
 };

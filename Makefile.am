@@ -1,5 +1,5 @@
 
-SUBDIRS = config mysql++-1.7.9 src 
+SUBDIRS = config src 
 
 ACLOCAL_AMFLAGS = -I project
 

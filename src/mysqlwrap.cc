@@ -1,6 +1,7 @@
 /*********************************************************************
  *
  * Authors: Vincenzo Ciaschini - Vincenzo.Ciaschini@cnaf.infn.it 
+ *          Valerio Venturi - valerio.venturi@cnaf.infn.it
  *
  * Copyright (c) 2002, 2003 INFN-CNAF on behalf of the EU DataGrid.
  * For license conditions see LICENSE file or
@@ -12,85 +13,106 @@
  *
  *********************************************************************/
 
-#include "dbwrap.h"
 #include "mysqlwrap.h"
+
 #include <string>
-#include <iostream>
-
-#define CATCH \
-catch (BadQuery& bq) \
-{ \
-  throw sqliface::DBEXC(bq.error); \
-} \
-catch (...) \
-{ \
-  throw sqliface::DBEXC(); \
-} \
-
-static ResUse dummy;
+#include <algorithm>
+#include <cctype>
 
 namespace bsq {
 
-myinterface::myinterface(const char *dbname, 
-			 const char *hostname, 
-			 const char *user, 
-			 const char *password) : con(true), 
-						 err(0)
+static bool nocase_compare(char c1, char c2)
 {
-  try 
-  {
-    con.connect(dbname, hostname, user, password);
-  
-    Query q = con.query();
-    q << "SET AUTOCOMMIT = 0;";
-    q.use();
-  }
-  CATCH
+  return (toupper(c1) == toupper(c2));
 }
 
-  myinterface::myinterface() : con(true), err(0) {}
+myinterface::myinterface() : mysql(mysql_init(0)),
+                             err(0) 
+{
+  if (!mysql) {
+    throw sqliface::DBEXC(mysql_error(mysql));
+  }
+}
+  
+myinterface::myinterface(const char * dbname, 
+                         const char * hostname,
+                         const char * user,
+                         const char * password) : mysql(mysql_init(0)),
+                                                  err(0)
+{
+  if (!mysql) {
+    throw sqliface::DBEXC(mysql_error(mysql));
+  }
+  
+  if (!mysql_real_connect(mysql, hostname, user, password, dbname, 0, 0, 0) ||
+      mysql_query(mysql, "SET AUTOCOMMIT = 0;")) {
+    mysql_close(mysql);
+    throw sqliface::DBEXC(mysql_error(mysql));
+  }
+}
 
-
-  myinterface::~myinterface(void) {}
+myinterface::~myinterface(void) 
+{
+  if(mysql)
+    mysql_close(mysql);
+}
 
 int myinterface::error(void) const
 {
   return err;
 }
 
-void myinterface::connect(const char *dbname, const char *hostname, const char *user, const char *password)
+void myinterface::connect(const char *dbname, 
+                          const char *hostname, 
+                          const char *user, 
+                          const char *password)
 {
-  try 
+  if (!mysql_real_connect(mysql,
+                          hostname,
+                          user,
+                          password,
+                          dbname,
+                          0,
+                          0,
+                          0))
   {
-    con.connect(dbname, hostname, user, password);
+    err = mysql_errno(mysql);
+    throw sqliface::DBEXC(mysql_error(mysql));
+  }
 
-    Query q = con.query();
-    q << "SET AUTOCOMMIT = 0;";
-    q.use();
-  } 
-  CATCH
-  err = 0;
+  if (mysql_query(mysql,
+                  "SET AUTOCOMMIT = 0;"))
+  {
+    err = mysql_errno(mysql);
+    throw sqliface::DBEXC(mysql_error(mysql));
+  }
 }
 
-sqliface::query *myinterface::newquery()
+sqliface::query * myinterface::newquery()
 {
   return new myquery(*this);
 }
 
-bsq::myquery::myquery(bsq::myinterface &face) : query_text(""), 
-						c(&face.con),
-						q(&face.con, true)  {}
+myquery::myquery(myinterface &face) : query_text(""),
+                                      mysql(face.mysql),
+                                      err(0)
+{
+}
 
 myquery::myquery(const myquery& query) : query_text(query.query_text), 
-					 c(query.c), 
-					 q(query.q) {}
+                                         mysql(query.mysql),
+                                         err(0)
+{
+}
 
-myquery::~myquery(void) {}
+myquery::~myquery(void) 
+{
+}
 
-sqliface::query &myquery::operator<<(std::string s)
+sqliface::query & myquery::operator<<(std::string s)
 {
   std::string tmp = query_text + s;
-  int    pos = tmp.find_last_of('\n');
+  int pos = tmp.find_last_of('\n');
 
   if (pos == -1)
     pos = 0;
@@ -101,55 +123,65 @@ sqliface::query &myquery::operator<<(std::string s)
 
 void myquery::exec(void)
 {
-  q << query_text;
-  query_text = "";
-
-  try 
+  if (mysql_query(mysql,
+                 query_text.c_str()))
   {
-    (void)q.use();
-  } 
-  CATCH
+    err = mysql_errno(mysql);
+    throw sqliface::DBEXC(mysql_error(mysql));  
+  }
+
+  query_text = "";
 }
 
 int myquery::error(void) const
 {
-  return 0;
+  return err;
 }
 
-sqliface::results* myquery::result(void)
+sqliface::results * myquery::result(void)
 { 
-  q << query_text;
-  query_text="";
+  if (mysql_query(mysql,
+                 query_text.c_str()))
+  {
+    err = mysql_errno(mysql);
+    throw sqliface::DBEXC(mysql_error(mysql));  
+  }
+  query_text = "";
 
-  return new bsq::myresults(&q);
+  MYSQL_RES * result = mysql_store_result(mysql);
+
+  if (!result)
+  {
+    err = mysql_errno(mysql);
+    throw sqliface::DBEXC(mysql_error(mysql));  
+  }
+
+  return new myresults(result);
 }
 
-myresults::myresults(Query *q) : value(true)
+myresults::myresults(MYSQL_RES * res) : result(res),
+                                        value(true),
+                                        row(mysql_fetch_row(result))
 {
-  try 
-  {
-    res = q->use();
-    row = res.fetch_row();
-
-    if (row == Row())
-      value = false;
-  } 
-  CATCH
+  if(!row)
+    value = false;
 }
 
 bool myresults::next(void)
 {
-  try 
-  {
-    row = res.fetch_row();
-    if (row == Row())
-      value = false;
-  } 
-  CATCH
-  return value;
+  if (result)
+    row = mysql_fetch_row(result);
+  if (!row)
+    value = false;
+
+  //  return value;
 }
 
-myresults::~myresults() {}
+myresults::~myresults() 
+{
+  if(result)
+    mysql_free_result(result);
+}
 
 const std::string myresults::get(int field) const
 {
@@ -158,17 +190,36 @@ const std::string myresults::get(int field) const
 
 const std::string myresults::get(const std::string& name) const
 {
-  return std::string(row[name]);
+  mysql_field_seek(result, 0);
+  MYSQL_FIELD * field = 0;
+  int index = 0;
+  while ((field = mysql_fetch_field(result)))
+  {
+    std::string field_name(field->name);
+    if (name.size() == field_name.size() &&
+        equal(name.begin(), name.end(), field->name, nocase_compare))
+      //name == (std::string)field->name)
+    {
+      return std::string(row[index] ? row[index] : "NULL");
+    }
+    ++index;
+  }
+  throw sqliface::DBEXC("Unknown column " + name + ".");
 }
 
 int myresults::size(void) const
 {
-  return row.size();
+  return mysql_num_fields(result);
 }
 
 const std::string myresults::name(int index) const
 {
-  return res.names(index);
+  if (index<0 || index>size())
+    throw sqliface::DBEXC("Index outside of range.");
+
+  MYSQL_FIELD * field = mysql_fetch_field_direct(result, index);
+
+  return field->name;
 }
 
 bool myresults::valid() const
@@ -177,7 +228,6 @@ bool myresults::valid() const
 }
 
 } // namespace bsq
-
 
 extern "C" {
 sqliface::interface *CreateDB()
