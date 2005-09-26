@@ -18,6 +18,7 @@
 
 extern "C" {
 #include <mysql.h>
+#include <mysqld_error.h>
 }
 
 namespace bsq {

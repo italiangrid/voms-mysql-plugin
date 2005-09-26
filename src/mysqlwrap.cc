@@ -67,14 +67,8 @@ void myinterface::connect(const char *dbname,
                           const char *user, 
                           const char *password)
 {
-  if (!mysql_real_connect(mysql,
-                          hostname,
-                          user,
-                          password,
-                          dbname,
-                          0,
-                          0,
-                          0))
+  if (!mysql_real_connect(mysql, hostname, user,
+                          password, dbname, 0, 0, 0))
   {
     err = mysql_errno(mysql);
     throw sqliface::DBEXC(mysql_error(mysql));
@@ -124,10 +118,11 @@ sqliface::query & myquery::operator<<(std::string s)
 void myquery::exec(void)
 {
   if (mysql_query(mysql,
-                 query_text.c_str()))
+                  query_text.c_str()))
   {
     err = mysql_errno(mysql);
-    throw sqliface::DBEXC(mysql_error(mysql));  
+    query_text = "";
+    throw sqliface::DBEXC(mysql_error(mysql));
   }
 
   query_text = "";
@@ -135,15 +130,18 @@ void myquery::exec(void)
 
 int myquery::error(void) const
 {
+  if(err == ER_LOCK_DEADLOCK)
+    return SQL_DEADLOCK;
   return err;
 }
 
 sqliface::results * myquery::result(void)
 { 
   if (mysql_query(mysql,
-                 query_text.c_str()))
+                  query_text.c_str()))
   {
     err = mysql_errno(mysql);
+    query_text = "";
     throw sqliface::DBEXC(mysql_error(mysql));  
   }
   query_text = "";
@@ -174,7 +172,7 @@ bool myresults::next(void)
   if (!row)
     value = false;
 
-  //  return value;
+  return value;
 }
 
 myresults::~myresults() 
@@ -185,7 +183,7 @@ myresults::~myresults()
 
 const std::string myresults::get(int field) const
 {
-  return std::string(row[field]);
+  return std::string(row[field] ? row[field] : "NULL");
 }
 
 const std::string myresults::get(const std::string& name) const

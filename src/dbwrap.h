@@ -15,8 +15,9 @@
 #ifndef SQLDBWRAP_H
 #define SQLDBWRAP_H
 
-//#include <exception>
 #include <string>
+
+#define SQL_DEADLOCK 6000
 
 namespace sqliface {
 
