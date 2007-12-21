@@ -443,6 +443,10 @@ bool myinterface::operationGetGroupAndRole(signed long int uid, char *group,
   unsigned long int size1 = strlen(group);
   unsigned long int size2 = strlen(role);
 
+  memset(&(arguments[0]), 0, sizeof(MYSQL_BIND));
+  memset(&(arguments[1]), 0, sizeof(MYSQL_BIND));
+  memset(&(arguments[2]), 0, sizeof(MYSQL_BIND));
+
   arguments[0].buffer_type = MYSQL_TYPE_STRING;
   arguments[0].buffer = group;
   arguments[0].is_null = 0;
@@ -465,7 +469,9 @@ bool myinterface::operationGetGroupAndRole(signed long int uid, char *group,
 bool myinterface::operationGetAll(signed long int uid, std::vector<std::string> &fqans)
 {
   MYSQL_BIND parameter[1];
-  memset(parameter, 0, sizeof(parameter));
+  //  memset(parameter, 0, sizeof(parameter));
+
+  memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
 
   parameter[0].buffer = (char *)&uid;
   parameter[0].buffer_type = MYSQL_TYPE_LONG;
@@ -485,10 +491,14 @@ bool myinterface::operationGetGroupAndRoleAttribs(signed long int uid, char *gro
   }
 
   MYSQL_BIND parameter[3];
-  memset(parameter, 0, sizeof(parameter));
+  //  memset(parameter, 0, sizeof(parameter));
 
   long unsigned int sizerole = strlen(role);
   long unsigned int sizegroup = strlen(group);
+
+  memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
+  memset(&(parameter[1]), 0, sizeof(MYSQL_BIND));
+  memset(&(parameter[2]), 0, sizeof(MYSQL_BIND));
 
   parameter[0].buffer = (char *)&uid;
   parameter[0].buffer_type = MYSQL_TYPE_LONG;
@@ -514,7 +524,9 @@ bool myinterface::operationGetGroupAttribs(signed long int uid,
                                            std::vector<gattrib> &attrs)
 {
   MYSQL_BIND parameter[1];
-  memset(parameter, 0, sizeof(parameter));
+  //  memset(parameter, 0, sizeof(parameter));
+
+  memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
 
   parameter[0].buffer = (char *)&uid;
   parameter[0].buffer_type = MYSQL_TYPE_LONG;
@@ -531,8 +543,11 @@ bool myinterface::operationGetRoleAttribs(signed long int uid, char *role,
                                            std::vector<gattrib> &attrs)
 {
   MYSQL_BIND parameter[2];
-  memset(parameter, 0, sizeof(parameter));
+  //  memset(parameter, 0, sizeof(parameter));
   long unsigned int sizerole = strlen(role);
+
+  memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
+  memset(&(parameter[1]), 0, sizeof(MYSQL_BIND));
 
   parameter[0].buffer = role;
   parameter[0].buffer_type = MYSQL_TYPE_STRING;
@@ -554,7 +569,9 @@ bool myinterface::operationGetAllAttribs(signed long int uid,
                                          std::vector<gattrib> &attrs)
 {
   MYSQL_BIND parameter[1];
-  memset(parameter, 0, sizeof(parameter));
+  //  memset(parameter, 0, sizeof(parameter));
+
+  memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
 
   parameter[0].buffer = (char *)&uid;
   parameter[0].buffer_type = MYSQL_TYPE_LONG;
@@ -761,6 +778,9 @@ bool myinterface::getFQANs(MYSQL_STMT *stmt, MYSQL_BIND *parameters, std::vector
   /* Temporary binding for first binding call */
   memset(results, 0, sizeof(results));
 
+  memset(&(results[0]), 0, sizeof(results[0]));
+  memset(&(results[1]), 0, sizeof(results[1]));
+
   results[0].buffer_type = MYSQL_TYPE_STRING;
   results[0].buffer = 0;
   results[0].buffer_length = 0;
@@ -856,7 +876,7 @@ signed long int myinterface::getUID_DER(X509 *certificate)
   memset(results, 0 ,sizeof(results));
 
   MYSQL_BIND parameter[2];
-  memset(results, 0 ,sizeof(parameter));
+  memset(parameter, 0 ,sizeof(parameter));
   
   int result;
 
@@ -1090,8 +1110,9 @@ signed long int myinterface::getUIDASCII_v1(X509 *cert)
   MYSQL_BIND parameter[2];
   MYSQL_BIND result[1];
   
-  memset(parameter, 0, sizeof(parameter));
-  memset(result, 0, sizeof(result));
+  memset(&(parameter[0]), 0, sizeof(parameter[0]));
+  memset(&(parameter[1]), 0, sizeof(parameter[1]));
+  memset(&(result[0]), 0, sizeof(result[0]));
 
   int cid;
 
@@ -1129,6 +1150,7 @@ signed long int myinterface::getUIDASCII_v1(X509 *cert)
 
   /* Determine UID */
 
+  memset(&parameter, 0, sizeof(parameter));
   parameter[0].buffer = (void*)dn.c_str();
   parameter[0].buffer_length = dn.size();
   parameter[0].buffer_type = MYSQL_TYPE_STRING;
@@ -1146,14 +1168,17 @@ signed long int myinterface::getUIDASCII_v1(X509 *cert)
   else
     stmt = stmt_get_uid_v1;
 
-  MYSQL_BIND res[0];
+  MYSQL_BIND res[1];
 
+  memset(res, 0, sizeof(res));
+  memset(&(res[0]), 0, sizeof(res[0]));
   res[0].buffer = (char *)&cid;
   res[0].buffer_type = MYSQL_TYPE_LONG;
 
   if (!executeQuery(stmt, parameter, res, 1)) {
     dn = translate(dn);
 
+    memset(&(parameter[0]), 0, sizeof(parameter[0]));
     parameter[0].buffer = (void *)dn.c_str();
     parameter[0].buffer_length = dn.size();
     parameter[0].buffer_type = MYSQL_TYPE_STRING;
@@ -1201,8 +1226,10 @@ signed long int myinterface::getUID(X509 *certificate)
     else 
       return uid;
   }
-  else
-    return getUIDASCII_v1(certificate);    
+  else {
+    (void)getUIDASCII_v1(certificate);
+    return 1;
+  }
 }
 
 int myinterface::operationGetVersion(void)
