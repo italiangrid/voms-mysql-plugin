@@ -314,10 +314,6 @@ bool myinterface::connect(const char *dbname,
                           const char *user, 
                           const char *password)
 {
-  free(this->dbname);
-  free(this->hostname);
-  free(this->user);
-
   this->dbname   = strdup(dbname);
   this->hostname = strdup(hostname);
   this->user     = strdup(user);
@@ -1221,15 +1217,30 @@ signed long int myinterface::getUID(X509 *certificate)
     //    uid = getUID_DER(certificate);
     if (uid == -1) {
       //      if (err == ERR_USER_UNKNOWN)
-      return getUIDASCII_v2(certificate);
+      uid = getUIDASCII_v2(certificate);
     }
-    else 
-      return uid;
   }
   else {
-    (void)getUIDASCII_v1(certificate);
-    return 1;
+    uid = getUIDASCII_v1(certificate);
   }
+
+  if (uid == -1) {
+    reconnect();
+
+    if (dbVersion == 3 ) {
+      //    uid = getUID_DER(certificate);
+      if (uid == -1) {
+        //      if (err == ERR_USER_UNKNOWN)
+        uid = getUIDASCII_v2(certificate);
+      }
+    }
+    else {
+      uid = getUIDASCII_v1(certificate);
+    }
+
+  }
+
+  return uid;
 }
 
 int myinterface::operationGetVersion(void)
