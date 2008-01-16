@@ -14,9 +14,9 @@
 #
 ########################################################################
 
-# $Revision: 1.1 $
+# $Revision: 1.3.2.1 $
 # $State: Exp $
-# $Date: 2005/05/03 10:47:01 $
+# $Date: 2008/01/16 10:33:20 $
 
 #
 # Access Control List for containers (group/role/capability)
@@ -411,3 +411,40 @@ CREATE TABLE requests (
   INDEX (requester),
   INDEX (lastchange)
 ) TYPE=InnoDB;
+
+CREATE TABLE attributes (
+        a_id BIGINT NOT NULL PRIMARY KEY,
+        a_name VARCHAR(255) NOT NULL,
+        a_desc LONGTEXT,
+        UNIQUE KEY (a_name)
+) TYPE = InnoDB;
+
+CREATE TABLE usr_attrs (
+        u_id BIGINT NOT NULL,
+        a_id BIGINT NOT NULL,
+        a_value LONGTEXT,
+        UNIQUE KEY (u_id, a_id),
+        INDEX (u_id),
+        INDEX (a_id)
+) TYPE = InnoDB;
+
+CREATE TABLE group_attrs (
+        g_id BIGINT NOT NULL,
+        a_id BIGINT NOT NULL,
+        a_value LONGTEXT,
+        UNIQUE KEY (g_id, a_id),
+        INDEX (g_id),
+        INDEX (a_id)
+) TYPE = InnoDB;
+
+CREATE TABLE role_attrs (
+        r_id BIGINT NOT NULL,
+        g_id BIGINT NOT NULL,
+        a_id BIGINT NOT NULL,
+        a_value LONGTEXT,
+        UNIQUE KEY (r_id, g_id, a_id),
+        INDEX (r_id),
+        INDEX (g_id),
+        INDEX (a_id)
+) TYPE = InnoDB;
+

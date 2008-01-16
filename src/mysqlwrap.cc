@@ -770,6 +770,7 @@ bool myinterface::registerQueries(void)
 bool myinterface::getFQANs(MYSQL_STMT *stmt, MYSQL_BIND *parameters, std::vector<std::string> &fqans)
 {
   MYSQL_BIND results[2];
+  my_bool is_null[2];
 
   /* Temporary binding for first binding call */
   memset(results, 0, sizeof(results));
@@ -781,11 +782,13 @@ bool myinterface::getFQANs(MYSQL_STMT *stmt, MYSQL_BIND *parameters, std::vector
   results[0].buffer = 0;
   results[0].buffer_length = 0;
   results[0].length = 0;
+  results[0].is_null = &(is_null[0]);
 
   results[1].buffer_type = MYSQL_TYPE_STRING;
   results[1].buffer = 0;
   results[1].buffer_length = 0;
   results[1].length = 0;
+  results[1].is_null = &(is_null[1]);
 
   /* Execute query */
   if (!executeQuery(stmt, parameters, results, 2)) {
@@ -803,8 +806,8 @@ bool myinterface::getFQANs(MYSQL_STMT *stmt, MYSQL_BIND *parameters, std::vector
 
     /* Now I've got the results: */
     std::string fqan = std::string((char *)(results[0].buffer), *(results[0].length)) +
-      (results[1].is_null || !(results[1].buffer) ||
-       ((char*)results[1].buffer)[0] == '\0' ? "" : std::string("/Role=") +
+      (is_null[1] || !(results[1].buffer) ||
+       (((results[1].length == 0) || ((char*)results[1].buffer)[0] == '\0')) ? "" : std::string("/Role=") +
        std::string((char *)(results[1].buffer), *(results[1].length)));
 
     fqans.push_back(fqan);
