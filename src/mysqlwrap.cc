@@ -1054,9 +1054,9 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
   MYSQL_STMT *stmt = NULL;
 
   if (insecure)
-    stmt = stmt_get_uid_v2_insecure;
+    stmt = stmt_get_uid_v1_insecure;
   else
-    stmt = stmt_get_uid_v2;
+    stmt = stmt_get_uid_v1;
 
   MYSQL_BIND res[0];
 
