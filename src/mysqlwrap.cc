@@ -1006,7 +1006,7 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
     parameter[0].buffer_type = MYSQL_TYPE_STRING;
     parameter[0].is_null = 0;
 
-    MYSQL_BIND result[0];
+    MYSQL_BIND result[1];
     memset(result, 0, sizeof(result));
     result[0].buffer=(char *)&cid;
     result[0].buffer_type = MYSQL_TYPE_LONG;
@@ -1058,7 +1058,7 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
   else
     stmt = stmt_get_uid_v1;
 
-  MYSQL_BIND res[0];
+  MYSQL_BIND res[1];
 
   res[0].buffer = 0;
   res[0].buffer_type = MYSQL_TYPE_STRING;
