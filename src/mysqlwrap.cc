@@ -695,13 +695,13 @@ bool myinterface::registerQueries(void)
 
   (dbVersion == 3 ?
    stmt_get_uid_v1 = registerQuery(
-    "SELECT id FROM certificate WHERE subject_string = ? AND ca_id = ?") :
+    "SELECT usr_id FROM certificate WHERE subject_string = ? AND ca_id = ?") :
    stmt_get_uid_v1 = registerQuery(
     "SELECT userid FROM usr WHERE dn = ? AND ca = ?"));
 
   (dbVersion == 3 ?
    stmt_get_uid_v1_insecure = registerQuery(
-     "SELECT id FROM certificate WHERE subject_string = ?") :
+     "SELECT usr_id FROM certificate WHERE subject_string = ?") :
    stmt_get_uid_v1_insecure = registerQuery(
      "SELECT userid FROM usr WHERE usr.dn = ?"));
 
@@ -960,7 +960,7 @@ bool myinterface::bindAndSetSize(MYSQL_STMT *stmt, MYSQL_BIND *outputs, int size
               outputs[j].buffer_type == MYSQL_TYPE_TINY_BLOB ||
               outputs[j].buffer_type == MYSQL_TYPE_STRING)
             free(outputs[j].buffer);
-          setError(ERR_NO_MEMORY, "Not enoguh memory");
+          setError(ERR_NO_MEMORY, "Not enough memory");
           return false;
         }
       }
@@ -995,7 +995,7 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
   OPENSSL_free(caname);
   OPENSSL_free(dnname);
 
-  int cid;
+  int cid = -1;
 
   if (!insecure) {
     MYSQL_BIND parameter[2];
@@ -1008,6 +1008,7 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
 
     MYSQL_BIND result[1];
     memset(result, 0, sizeof(result));
+    memset(&(result[0]), 0, sizeof(result[0]));
     result[0].buffer=(char *)&cid;
     result[0].buffer_type = MYSQL_TYPE_LONG;
 
@@ -1038,7 +1039,7 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
   /* Determine UID */
 
   MYSQL_BIND parameter[2];
-
+  memset(parameter, 0, sizeof(parameter));
   parameter[0].buffer = (void*)dn.c_str();
   parameter[0].buffer_length = dn.size();
   parameter[0].buffer_type = MYSQL_TYPE_STRING;
@@ -1059,10 +1060,10 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
     stmt = stmt_get_uid_v1;
 
   MYSQL_BIND res[1];
-
-  res[0].buffer = 0;
-  res[0].buffer_type = MYSQL_TYPE_STRING;
-  res[0].buffer_length = 0;
+  signed long int uid = -1;
+  memset(res, 0, sizeof(res));
+  res[0].buffer = (void*)&uid;
+  res[0].buffer_type = MYSQL_TYPE_LONG;
 
   result = executeQuery(stmt, parameter, res, 1);
 
@@ -1086,7 +1087,7 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
       return -1;
   }
 
-  return cid;
+  return uid;
 }
 
 signed long int myinterface::getUIDASCII_v1(X509 *cert)
@@ -1291,7 +1292,7 @@ bool myinterface::getAttributes(MYSQL_STMT *stmt,
   MYSQL_BIND results[4];
   unsigned long int len[4];
 
-  len[1] = len[2] = len[3] = len[4] = 0;
+  len[0] = len[1] = len[2] = len[3] = 0;
   /* Temporary binding for first binding call */
   memset(results, 0, sizeof(results));
 
@@ -1329,6 +1330,7 @@ bool myinterface::getAttributes(MYSQL_STMT *stmt,
     mysql_stmt_fetch_column(stmt, &(results[0]), 0, 0);
     mysql_stmt_fetch_column(stmt, &(results[1]), 1, 0);
     mysql_stmt_fetch_column(stmt, &(results[2]), 2, 0);
+    mysql_stmt_fetch_column(stmt, &(results[3]), 3, 0);
       
     gattrib ga;
     ga.name      = std::string((char*)(results[0].buffer), *(results[0].length));
@@ -1344,7 +1346,10 @@ bool myinterface::getAttributes(MYSQL_STMT *stmt,
     if (!(results[2].is_null || (!results[2].buffer) ||
           (((char *)results[2].buffer)[0] == '\0')))
       ga.qualifier = std::string( ((char*)(results[2].buffer)),
-                                  (std::string::size_type)(*(results[2].length)));
+                                  (std::string::size_type)(*(results[2].length))) + 
+        (results[3].is_null || *(results[3].length) == 0 ? "" : "/Role=" + 
+         std::string( ((char*)(results[3].buffer)),
+                      (std::string::size_type)(*(results[3].length))));
 //     ga.qualifier = (results[2].is_null || (!results[2].buffer) ||
 //                     ((char *)results[2].buffer)[0] == '\0' ? "" :
 //                     std::string((char*)(results[2].buffer)), (std::string::size_type)(*(results[2].length)));
