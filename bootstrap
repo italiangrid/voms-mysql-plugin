@@ -4,5 +4,5 @@ set -x
 aclocal -I project
 libtoolize --force
 autoheader
-automake --foreign --add-missing --copy
+automake --foreign --copy
 autoconf

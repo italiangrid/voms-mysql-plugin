@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Glite Security VOMS MySQL], [3.0.4])
+AC_INIT([Glite Security VOMS MySQL], [3.0.5])
 
 command_line="$@"
 
@@ -75,7 +75,7 @@ AC_SUBST(COMMAND_LINE)
 
 # Dependencies checks
 have_mysql=no
-AC_MYSQL([4.0.11], [4.1.20], have_mysql=yes, have_mysql=no)
+AC_MYSQL([4.0.11], [9.9.99], have_mysql=yes, have_mysql=no)
 AC_MSG_RESULT(["MySQL found $have_mysql"])
 
 AC_GLITE
