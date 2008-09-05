@@ -815,7 +815,10 @@ bool myinterface::getFQANs(MYSQL_STMT *stmt, MYSQL_BIND *parameters, std::vector
   free(results[0].buffer);
   free(results[1].buffer);
 
-  return true;
+  if (numberOfRows == 0)
+    return false;
+  else
+    return true;
 }
 
 signed long int myinterface::getUID_DER(X509 *certificate)

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Glite Security VOMS MySQL], [3.0.5])
+AC_INIT([Glite Security VOMS MySQL], [3.0.7])
 
 command_line="$@"
 
