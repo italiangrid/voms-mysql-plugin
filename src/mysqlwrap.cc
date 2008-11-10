@@ -1232,6 +1232,7 @@ signed long int myinterface::getUID(X509 *certificate)
   }
 
   if (uid == -1) {
+if (err == ERR_NO_DB || mysql_errno(mysql) == CR_SERVER_LOST) {
     reconnect();
 
     if (dbVersion == 3 ) {
@@ -1246,7 +1247,7 @@ signed long int myinterface::getUID(X509 *certificate)
     }
 
   }
-
+}
   return uid;
 }
 
