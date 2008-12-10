@@ -20,6 +20,11 @@
 #include <algorithm>
 #include <cctype>
 
+extern "C" {
+#include <string.h>
+#include <stdlib.h>
+}
+
 static std::string translate(const std::string& name)
 {
   std::string::size_type userid = name.find(std::string("/USERID="));
@@ -62,6 +67,21 @@ bool myinterface::operation(int operation, void *result, ...)
 
   if (!result || !isConnected())
     return false;
+
+  unsigned long old_thread_id = mysql_thread_id(mysql);
+  if (mysql_ping(mysql))
+    reconnect();
+  else {
+    unsigned long new_thread_id = mysql_thread_id(mysql);
+    if (new_thread_id != old_thread_id) {
+      if (!registerQueries())
+        return false;
+    }
+  }
+
+//   if (mysql_errno(mysql) ==  CR_SERVER_GONE_ERROR) {
+//     reconnect();
+//   }
 
   std::vector<std::string> *fqans = ((std::vector<std::string> *)result);
   std::vector<gattrib> *attrs = ((std::vector<gattrib> *)result);
@@ -581,7 +601,7 @@ bool myinterface::operationGetAllAttribs(signed long int uid,
     getAttributes(stmt_get_group_and_role_attributes_all, parameter, attrs);
 }
 
-MYSQL_STMT *myinterface::registerQuery(char *query)
+MYSQL_STMT *myinterface::registerQuery(const char *query)
 {
   MYSQL_STMT *stmt = NULL;
 
@@ -1232,22 +1252,23 @@ signed long int myinterface::getUID(X509 *certificate)
   }
 
   if (uid == -1) {
-if (err == ERR_NO_DB || mysql_errno(mysql) == CR_SERVER_LOST) {
-    reconnect();
+    if (mysql_errno(mysql) == CR_SERVER_LOST ||
+        err == ERR_NO_DB) {
+      reconnect();
 
-    if (dbVersion == 3 ) {
-      //    uid = getUID_DER(certificate);
-      if (uid == -1) {
-        //      if (err == ERR_USER_UNKNOWN)
-        uid = getUIDASCII_v2(certificate);
+      if (dbVersion == 3 ) {
+        //    uid = getUID_DER(certificate);
+        if (uid == -1) {
+          //      if (err == ERR_USER_UNKNOWN)
+          uid = getUIDASCII_v2(certificate);
+        }
+      }
+      else {
+        uid = getUIDASCII_v1(certificate);
       }
     }
-    else {
-      uid = getUIDASCII_v1(certificate);
-    }
-
   }
-}
+
   return uid;
 }
 
@@ -1265,6 +1286,7 @@ int myinterface::getVersion(void)
     MYSQL_BIND result[1];
 
     memset(result, 0, sizeof(result));
+    memset(&(result[0]), 0, sizeof(result[0]));
 
     long unsigned int size = 0;
 
