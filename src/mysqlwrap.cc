@@ -79,10 +79,6 @@ bool myinterface::operation(int operation, void *result, ...)
     }
   }
 
-//   if (mysql_errno(mysql) ==  CR_SERVER_GONE_ERROR) {
-//     reconnect();
-//   }
-
   std::vector<std::string> *fqans = ((std::vector<std::string> *)result);
   std::vector<gattrib> *attrs = ((std::vector<gattrib> *)result);
   X509 *cert = NULL;
@@ -286,8 +282,6 @@ myinterface::myinterface() : dbname(NULL),
                              stmt_get_groups(NULL),
                              stmt_get_groups_and_role(NULL),
                              stmt_get_all(NULL),
-                             stmt_get_uid_v2(NULL),
-                             stmt_get_uid_v2_insecure(NULL),
                              stmt_get_cid_v1(NULL),
                              stmt_get_uid_v1(NULL),
                              stmt_get_uid_v1_insecure(NULL),
@@ -485,7 +479,6 @@ bool myinterface::operationGetGroupAndRole(signed long int uid, char *group,
 bool myinterface::operationGetAll(signed long int uid, std::vector<std::string> &fqans)
 {
   MYSQL_BIND parameter[1];
-  //  memset(parameter, 0, sizeof(parameter));
 
   memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
 
@@ -507,7 +500,6 @@ bool myinterface::operationGetGroupAndRoleAttribs(signed long int uid, char *gro
   }
 
   MYSQL_BIND parameter[3];
-  //  memset(parameter, 0, sizeof(parameter));
 
   long unsigned int sizerole = strlen(role);
   long unsigned int sizegroup = strlen(group);
@@ -540,7 +532,6 @@ bool myinterface::operationGetGroupAttribs(signed long int uid,
                                            std::vector<gattrib> &attrs)
 {
   MYSQL_BIND parameter[1];
-  //  memset(parameter, 0, sizeof(parameter));
 
   memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
 
@@ -559,7 +550,6 @@ bool myinterface::operationGetRoleAttribs(signed long int uid, char *role,
                                            std::vector<gattrib> &attrs)
 {
   MYSQL_BIND parameter[2];
-  //  memset(parameter, 0, sizeof(parameter));
   long unsigned int sizerole = strlen(role);
 
   memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
@@ -585,7 +575,6 @@ bool myinterface::operationGetAllAttribs(signed long int uid,
                                          std::vector<gattrib> &attrs)
 {
   MYSQL_BIND parameter[1];
-  //  memset(parameter, 0, sizeof(parameter));
 
   memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
 
@@ -690,23 +679,6 @@ bool myinterface::registerQueries(void)
     "WHERE groups.gid = m.gid AND "
     "m.userid = ?");
 
-  if (dbVersion == 3)
-    stmt_get_uid_v2 = registerQuery(
-      "SELECT certificate.id, certificate.suspended, "
-      "certificate.suspended_reason "
-      "FROM certificate, ca "
-      "WHERE certificate.subject_der = ? AND "
-      "certificate.ca_id = ca.id AND "
-      "ca.subject_der = ?");
-
-  if (dbVersion == 3)
-    stmt_get_uid_v2_insecure = registerQuery(
-      "SELECT certificate.id, certificate.suspended, "
-      "certificate.suspended_reason "
-      "FROM certificate, ca "
-      "WHERE certificate.subject_der = ? AND "
-      "ca.subject_der = ?");
-
   (dbVersion == 3 ?
    stmt_get_cid_v1 = registerQuery(
      "SELECT id FROM ca WHERE subject_string = ?") :
@@ -715,13 +687,13 @@ bool myinterface::registerQueries(void)
 
   (dbVersion == 3 ?
    stmt_get_uid_v1 = registerQuery(
-    "SELECT usr_id FROM certificate WHERE subject_string = ? AND ca_id = ?") :
+    "SELECT usr_id FROM certificate WHERE subject_string = ? AND ca_id = ? AND NOT suspended") :
    stmt_get_uid_v1 = registerQuery(
     "SELECT userid FROM usr WHERE dn = ? AND ca = ?"));
 
   (dbVersion == 3 ?
    stmt_get_uid_v1_insecure = registerQuery(
-     "SELECT usr_id FROM certificate WHERE subject_string = ?") :
+     "SELECT usr_id FROM certificate WHERE subject_string = ? AND NOT suspended") :
    stmt_get_uid_v1_insecure = registerQuery(
      "SELECT userid FROM usr WHERE usr.dn = ?"));
 
@@ -729,8 +701,6 @@ bool myinterface::registerQueries(void)
       !stmt_get_groups ||
       !stmt_get_groups_and_role ||
       !stmt_get_all ||
-      ((dbVersion == 3) && !stmt_get_uid_v2) ||
-      ((dbVersion == 3) && !stmt_get_uid_v2_insecure) ||
       !stmt_get_cid_v1 ||
       !stmt_get_uid_v1 ||
       !stmt_get_uid_v1_insecure ||
@@ -750,12 +720,6 @@ bool myinterface::registerQueries(void)
       
     if (stmt_get_all)
       mysql_stmt_close(stmt_get_all);
-      
-    if (stmt_get_uid_v2)
-      mysql_stmt_close(stmt_get_uid_v2);
-      
-    if (stmt_get_uid_v2_insecure)
-      mysql_stmt_close(stmt_get_uid_v2_insecure);
       
     if (stmt_get_cid_v1)
       mysql_stmt_close(stmt_get_cid_v1);
@@ -839,113 +803,6 @@ bool myinterface::getFQANs(MYSQL_STMT *stmt, MYSQL_BIND *parameters, std::vector
     return false;
   else
     return true;
-}
-
-signed long int myinterface::getUID_DER(X509 *certificate)
-{
-  X509_NAME *subjname = X509_get_subject_name(certificate);
-  X509_NAME *issname  = X509_get_issuer_name(certificate);
-
-  if (!subjname || !issname) {
-    setError(ERR_X509, "Unable to extract subject data from certificate.");
-    return -1;
-  }
-
-  /* First try looking into blob */
-
-  /* Determine subject and issuer blob. */
-  int   lensubj = i2d_X509_NAME(subjname, NULL);
-  unsigned char *buffersubj = (unsigned char*)malloc(lensubj);
-  char *escaped_buffer_subj = (char*)malloc(lensubj*2+1);
-
-  if (!buffersubj || !escaped_buffer_subj) {
-    free(buffersubj);
-    free(escaped_buffer_subj);
-    setError(ERR_NO_MEMORY, "Unable to allocate necessary memory.");
-    return -1;
-  }
-
-  (void)i2d_X509_NAME(subjname, &buffersubj);
-  long unsigned int newlen_subj = mysql_real_escape_string(mysql, (char*)buffersubj, 
-                                             escaped_buffer_subj, lensubj);
-  free(buffersubj);
-
-  long unsigned int newlen_iss = 0;
-  char *escaped_buffer_iss = NULL;
-
-  if (!insecure) {
-    int leniss  = i2d_X509_NAME(issname, NULL);
-    unsigned char *bufferiss  = (unsigned char*)malloc(leniss);
-    escaped_buffer_iss = (char*)malloc(leniss*2+1);
-
-    if (!bufferiss || !escaped_buffer_iss) {
-      free(bufferiss);
-      free(escaped_buffer_iss);
-      setError(ERR_NO_MEMORY, "Unable to allocate necessary memory.");
-      return -1;
-    }
-
-    (void)i2d_X509_NAME(issname, &bufferiss);
-    newlen_iss  = mysql_real_escape_string(mysql, (char *)bufferiss, 
-                                           escaped_buffer_iss, leniss);
-  
-    free(bufferiss);
-  }
-
-  /* now construct query. */
-
-  MYSQL_BIND results[3];
-  memset(results, 0 ,sizeof(results));
-
-  MYSQL_BIND parameter[2];
-  memset(parameter, 0 ,sizeof(parameter));
-  
-  int result;
-
-  parameter[0].buffer = escaped_buffer_subj;
-  parameter[0].length = &newlen_subj;
-  parameter[0].buffer_type = MYSQL_TYPE_BLOB;
-  parameter[0].is_null = 0;
-
-  parameter[1].buffer = escaped_buffer_iss;
-  parameter[1].length = &newlen_iss;
-  parameter[1].buffer_type = MYSQL_TYPE_BLOB;
-  parameter[1].is_null = 0;
-
-
-  MYSQL_STMT *stmt;
-  if (insecure)
-    stmt = stmt_get_uid_v2_insecure;
-  else
-    stmt = stmt_get_uid_v2;
-
-  int id;
-  int suspended;
-
-  results[0].buffer = (char*)&id;
-  results[0].buffer_type = MYSQL_TYPE_LONG;
-  results[1].buffer = (char*)&suspended;
-  results[1].buffer_type = MYSQL_TYPE_TINY;
-  results[2].buffer = 0;
-  results[2].buffer_type = MYSQL_TYPE_BLOB;
-  results[2].buffer_length = 0;
-
-  result = executeQuery(stmt_get_uid_v2_insecure, parameter, results, 3);
-
-  if (result) {
-    if (!mysql_stmt_fetch(stmt)) {
-      if (suspended) {
-        setError(ERR_ACCOUNT_SUSPENDED, std::string((char *)(results[2].buffer),
-                                                    results[2].buffer_length));
-        free(results[2].buffer);
-        return -1;
-      }
-      return id;
-    }
-  }
-  setError(ERR_USER_UNKNOWN, "User Unknown");
-
-  return -1;
 }
 
 bool myinterface::bindAndSetSize(MYSQL_STMT *stmt, MYSQL_BIND *outputs, int size)
@@ -1241,11 +1098,7 @@ signed long int myinterface::getUID(X509 *certificate)
   signed long int uid = -1;
 
   if (dbVersion == 3 ) {
-    //    uid = getUID_DER(certificate);
-    if (uid == -1) {
-      //      if (err == ERR_USER_UNKNOWN)
-      uid = getUIDASCII_v2(certificate);
-    }
+    uid = getUIDASCII_v2(certificate);
   }
   else {
     uid = getUIDASCII_v1(certificate);
@@ -1257,11 +1110,7 @@ signed long int myinterface::getUID(X509 *certificate)
       reconnect();
 
       if (dbVersion == 3 ) {
-        //    uid = getUID_DER(certificate);
-        if (uid == -1) {
-          //      if (err == ERR_USER_UNKNOWN)
-          uid = getUIDASCII_v2(certificate);
-        }
+        uid = getUIDASCII_v2(certificate);
       }
       else {
         uid = getUIDASCII_v1(certificate);
@@ -1365,9 +1214,6 @@ bool myinterface::getAttributes(MYSQL_STMT *stmt,
           ( ((char *)(results[1].buffer))[0]) == '\0'))
       ga.value = std::string( ((char *)(results[1].buffer)),
                               (std::string::size_type)(*(results[1].length)));
-//     ga.value     = (results[1].is_null || (!results[1].buffer) ||
-//                     ((char *)results[1].buffer)[0] == '\0' ? "" :
-//                     std::string((char*)(results[1].buffer)), (std::string::size_type)(*(results[1].length)));
 
     if (!(results[2].is_null || (!results[2].buffer) ||
           (((char *)results[2].buffer)[0] == '\0')))
@@ -1376,9 +1222,7 @@ bool myinterface::getAttributes(MYSQL_STMT *stmt,
         (results[3].is_null || *(results[3].length) == 0 ? "" : "/Role=" + 
          std::string( ((char*)(results[3].buffer)),
                       (std::string::size_type)(*(results[3].length))));
-//     ga.qualifier = (results[2].is_null || (!results[2].buffer) ||
-//                     ((char *)results[2].buffer)[0] == '\0' ? "" :
-//                     std::string((char*)(results[2].buffer)), (std::string::size_type)(*(results[2].length)));
+
     attrs.push_back(ga);
   }
   return true;

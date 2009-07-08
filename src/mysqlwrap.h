@@ -66,7 +66,6 @@ private:
   MYSQL_STMT *registerQuery(const char *);
   bool registerQueries(void);
   bool getFQANs(MYSQL_STMT *, MYSQL_BIND *, std::vector<std::string>&);
-  signed long int getUID_DER(X509 *);
   bool  bindAndSetSize(MYSQL_STMT *, MYSQL_BIND *, int);
   signed long int getUIDASCII_v2(X509 *);
   signed long int getUIDASCII_v1(X509 *);
@@ -92,8 +91,6 @@ private:
   MYSQL_STMT *stmt_get_groups;
   MYSQL_STMT *stmt_get_groups_and_role;
   MYSQL_STMT *stmt_get_all;
-  MYSQL_STMT *stmt_get_uid_v2;
-  MYSQL_STMT *stmt_get_uid_v2_insecure;
   MYSQL_STMT *stmt_get_cid_v1;
   MYSQL_STMT *stmt_get_uid_v1;
   MYSQL_STMT *stmt_get_uid_v1_insecure;
