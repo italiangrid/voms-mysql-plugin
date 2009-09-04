@@ -681,9 +681,9 @@ bool myinterface::registerQueries(void)
 
   (dbVersion == 3 ?
    stmt_get_cid_v1 = registerQuery(
-     "SELECT id FROM ca WHERE subject_string = ?") :
+     "SELECT cid FROM ca WHERE subject_string = ?") :
    stmt_get_cid_v1 = registerQuery(
-     "SELECT id FROM ca WHERE ca.ca = ?"));
+     "SELECT cid FROM ca WHERE ca.ca = ?"));
 
   (dbVersion == 3 ?
    stmt_get_uid_v1 = registerQuery(
