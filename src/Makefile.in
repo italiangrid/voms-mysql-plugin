@@ -60,6 +60,9 @@ am__DEPENDENCIES_1 =
 libvomsmysql_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_libvomsmysql_la_OBJECTS = mysqlwrap.lo
 libvomsmysql_la_OBJECTS = $(am_libvomsmysql_la_OBJECTS)
+libvomsmysql_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(libvomsmysql_la_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/autogen
 depcomp = $(SHELL) $(top_srcdir)/./project/depcomp
 am__depfiles_maybe = depfiles
@@ -216,7 +219,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libvomsmysql.la
 libvomsmysql_la_SOURCES = mysqlwrap.cc mysqlwrap.h dbwrap.h
-libvomsmysql_la_LIBADD = $(MYSQL_LIBS)
+libvomsmysql_la_LIBADD = $(MYSQL_LIBS) -lcrypto
+libvomsmysql_la_LDFLAGS = -module -avoid-version -no-undefined
 AM_CPPFLAGS = $(MYSQL_CFLAGS)
 all: all-am
 
@@ -279,7 +283,7 @@ clean-libLTLIBRARIES:
 	  rm -f "$${dir}/so_locations"; \
 	done
 libvomsmysql.la: $(libvomsmysql_la_OBJECTS) $(libvomsmysql_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(libdir) $(libvomsmysql_la_OBJECTS) $(libvomsmysql_la_LIBADD) $(LIBS)
+	$(libvomsmysql_la_LINK) -rpath $(libdir) $(libvomsmysql_la_OBJECTS) $(libvomsmysql_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

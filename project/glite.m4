@@ -4,7 +4,7 @@ dnl - GLITE_LOCATION
 dnl - GLITE_CFLAGS
 dnl - DISTTAR
 
-AC_DEFUN(AC_GLITE,
+AC_DEFUN([AC_GLITE],
 [
     AC_ARG_WITH(glite_location,
         [  --with-glite-location=PFX     prefix where GLITE is installed. (/opt/glite)],

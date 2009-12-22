@@ -37,10 +37,10 @@ AC_DEFUN([AC_MYSQL],
     result=no
     ac_cv_mysql_valid=no
 
-    AC_PATH_PROG(PMYSQL,mysql,no,$MYSQL_BIN_PATH)
+    AC_PATH_PROG(PMYSQL,mysql_config,no,$MYSQL_BIN_PATH)
 
     if test "$PMYSQL" != "no" ; then
-        MYSQL_VERSION=`$PMYSQL --version | cut -d' ' -f6 | tr -cd '0-9.'`
+        MYSQL_VERSION=`$PMYSQL --version | tr -cd '0-9.'`
 
         mysql_version_between(3.0.0,$MYSQL_VERSION,3.999.999,
             mysql_greater_than_3=no,mysql_greater_than_3=yes)
@@ -53,20 +53,13 @@ AC_DEFUN([AC_MYSQL],
     ac_save_CFLAGS=$CFLAGS
     ac_save_LIBS=$LIBS
 
-    if test -n "$with_mysql_prefix" -a "$with_mysql_prefix" != "/usr" -a "x$result" = "xyes" ; then
-		MYSQL_CFLAGS="-I$with_mysql_prefix/include -I$with_mysql_prefix/include/mysql"
-		MYSQL_LIBS="-L$with_mysql_prefix/lib -L$with_mysql_prefix/lib/mysql"
-    else
-        MYSQL_CFLAGS=""
-	MYSQL_LIBS=""
-    fi
-
     if test "x$result" = "xyes" ; then
       if test "x$mysql_greater_than_3" = "xyes" ; then
-        MYSQL_LIBS="$MYSQL_LIBS -lmysqlclient -lz"
+        MYSQL_CFLAGS=`$PMYSQL --include`
       else
-	MYSQL_LIBS="$MYSQL_LIBS -lmysqlclient"
+        MYSQL_CFLAGS=`$PMYSQL --cflags`
       fi
+      MYSQL_LIBS=`$PMYSQL --libs`
         
       CFLAGS="$MYSQL_CFLAGS $CFLAGS"
       LIBS="$MYSQL_LIBS $LIBS"
@@ -94,8 +87,8 @@ AC_DEFUN([AC_MYSQL],
         MYSQL_INSTALL_PATH=$with_mysql_prefix
 	ifelse([$3], , :, [$3])
     else
-	MYSQL_CFLAGS="-I/usr/include/mysql"
-	MYSQL_LIBS="-l/usr/lib/mysql"
+	MYSQL_CFLAGS=
+	MYSQL_LIBS=
 	ifelse([$4], , :, [$4])
     fi
 
