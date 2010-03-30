@@ -17003,8 +17003,8 @@ fi
     result=no
     ac_cv_mysql_valid=no
 
-    # Extract the first word of "mysql", so it can be a program name with args.
-set dummy mysql; ac_word=$2
+    # Extract the first word of "mysql_config", so it can be a program name with args.
+set dummy mysql_config; ac_word=$2
 { $as_echo "$as_me:$LINENO: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
 if test "${ac_cv_path_PMYSQL+set}" = set; then
@@ -17046,7 +17046,7 @@ fi
 
 
     if test "$PMYSQL" != "no" ; then
-        MYSQL_VERSION=`$PMYSQL --version | cut -d' ' -f6 | tr -cd '0-9.'`
+        MYSQL_VERSION=`$PMYSQL --version | tr -cd '0-9.'`
 
 
 	l=0; for i in `echo 3.0.0 | tr . ' '`; do l=`expr $i + 1000 \* $l`; done
@@ -17071,20 +17071,13 @@ $as_echo "Could not find mysql tool!" >&6; }
     ac_save_CFLAGS=$CFLAGS
     ac_save_LIBS=$LIBS
 
-    if test -n "$with_mysql_prefix" -a "$with_mysql_prefix" != "/usr" -a "x$result" = "xyes" ; then
-		MYSQL_CFLAGS="-I$with_mysql_prefix/include -I$with_mysql_prefix/include/mysql"
-		MYSQL_LIBS="-L$with_mysql_prefix/lib -L$with_mysql_prefix/lib/mysql"
-    else
-        MYSQL_CFLAGS=""
-	MYSQL_LIBS=""
-    fi
-
     if test "x$result" = "xyes" ; then
       if test "x$mysql_greater_than_3" = "xyes" ; then
-        MYSQL_LIBS="$MYSQL_LIBS -lmysqlclient -lz"
+        MYSQL_CFLAGS=`$PMYSQL --include`
       else
-	MYSQL_LIBS="$MYSQL_LIBS -lmysqlclient"
+        MYSQL_CFLAGS=`$PMYSQL --cflags`
       fi
+      MYSQL_LIBS=`$PMYSQL --libs`
 
       CFLAGS="$MYSQL_CFLAGS $CFLAGS"
       LIBS="$MYSQL_LIBS $LIBS"
@@ -17157,8 +17150,8 @@ $as_echo "mysql *found* version: $MYSQL_VERSION" >&6; }
         MYSQL_INSTALL_PATH=$with_mysql_prefix
 	have_mysql=yes
     else
-	MYSQL_CFLAGS="-I/usr/include/mysql"
-	MYSQL_LIBS="-l/usr/lib/mysql"
+	MYSQL_CFLAGS=
+	MYSQL_LIBS=
 	have_mysql=no
     fi
 
