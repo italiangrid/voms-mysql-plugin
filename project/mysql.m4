@@ -16,83 +16,18 @@ AC_DEFUN([mysql_version_between],
 
 AC_DEFUN([AC_MYSQL],
 [
-    AC_ARG_WITH(mysql_prefix, 
-       [  --with-mysql-prefix=PFX      prefix where MySQL is installed.],
-       , 
-       with_mysql_prefix=${MYSQL_INSTALL_PATH:-/usr})
+# Get MySQL library and include locations
+  AC_ARG_WITH([mysql-include-path],
+              [ --with-mysql-include-path   path to mysql include files],
+              [MYSQL_CFLAGS="-I$withval"],
+              [MYSQL_CFLAGS='-I/usr/include/mysql'])
 
-    if test -n "$with_mysql_prefix" -a "$with_mysql_prefix" != "/usr" ; then
-        MYSQL_BIN_PATH=$with_mysql_prefix/bin
-    else	
-        MYSQL_BIN_PATH=/usr/bin
-    fi
 
-    dnl
-    dnl check the mysql version. if the major version is greater than 3
-    dnl - then the MYSQL_LIBS macro is equal to -lmysqlclient -lz
-    dnl - otherwise the MYSQL_LIBS macro is equal to -lmysqlclient
-    dnl
+  AC_ARG_WITH([mysql-lib-path],
+              [--with-mysql-lib-path  path to mysql libraries],
+              [MYSQL_LIBS="-L$withval -lmysqlclient"],
+              [MYSQL_LIBS='-L /usr/lib/mysql -lmysqlclient'])
 
-    mysql_greater_than_3=no
-    result=no
-    ac_cv_mysql_valid=no
-
-    AC_PATH_PROG(PMYSQL,mysql_config,no,$MYSQL_BIN_PATH)
-
-    if test "$PMYSQL" != "no" ; then
-        MYSQL_VERSION=`$PMYSQL --version | tr -cd '0-9.'`
-
-        mysql_version_between(3.0.0,$MYSQL_VERSION,3.999.999,
-            mysql_greater_than_3=no,mysql_greater_than_3=yes)
-
-		mysql_version_between($1,$MYSQL_VERSION,$2,result=yes,:)
-    else
-        AC_MSG_RESULT([Could not find mysql tool!])
-    fi
-
-    ac_save_CFLAGS=$CFLAGS
-    ac_save_LIBS=$LIBS
-
-    if test "x$result" = "xyes" ; then
-      if test "x$mysql_greater_than_3" = "xyes" ; then
-        MYSQL_CFLAGS=`$PMYSQL --include`
-      else
-        MYSQL_CFLAGS=`$PMYSQL --cflags`
-      fi
-      MYSQL_LIBS=`$PMYSQL --libs`
-        
-      CFLAGS="$MYSQL_CFLAGS $CFLAGS"
-      LIBS="$MYSQL_LIBS $LIBS"
-
-      AC_TRY_COMPILE([
-  	 #include <mysql.h>
-       ],[ MYSQL_FIELD mf ],
-       [ ac_cv_mysql_valid=yes ], [ ac_cv_mysql_valid=no ])
-
-      CFLAGS=$ac_save_CFLAGS
-      LIBS=$ac_save_LIBS
-    fi
-
-    AC_MSG_RESULT([mysql status:  $ac_cv_mysql_valid])
-    if test "x$ac_cv_mysql_valid" = "xno" ; then
-      AC_MSG_RESULT([mysql status: **** suitable version NOT FOUND])
-    else
-      AC_MSG_RESULT([mysql status: **** suitable version FOUND])
-    fi
-
-    AC_MSG_RESULT([mysql *required* version between $1 and $2])
-    AC_MSG_RESULT([mysql *found* version: $MYSQL_VERSION])
-
-    if test "x$ac_cv_mysql_valid" = "xyes" ; then
-        MYSQL_INSTALL_PATH=$with_mysql_prefix
-	ifelse([$3], , :, [$3])
-    else
-	MYSQL_CFLAGS=
-	MYSQL_LIBS=
-	ifelse([$4], , :, [$4])
-    fi
-
-    AC_SUBST(MYSQL_INSTALL_PATH)
-    AC_SUBST(MYSQL_CFLAGS)
-    AC_SUBST(MYSQL_LIBS)
+AC_SUBST([MYSQL_CFLAGS])
+AC_SUBST([MYSQL_LIBS])
 ])
