@@ -9,17 +9,28 @@ dnl prerequisites:
 AC_DEFUN([AC_MYSQL],
 [
 # Get MySQL library and include locations
-  AC_ARG_WITH([mysql-include-path],
-              [ --with-mysql-include-path   path to mysql include files],
-              [MYSQL_CFLAGS="-I$withval"],
-              [MYSQL_CFLAGS='-I/usr/include/mysql'])
+  AC_MSG_CHECKING([for MySQL incdir])
+
+  AC_ARG_WITH(mysql-incdir,
+	           [ --with-mysql-incdir=<dir> Default is /usr/include/mysql],
+             [mysql_incdir="$withval"], 
+             [mysql_incdir="/usr/include/mysql"])
+
+  if test -d "$mysql_incdir"; then
+  	AC_MSG_RESULT([found $mysql_incdir])
+    MYSQL_CFLAGS="$CPPFLAGS -I$mysql_incdir"
+  else
+	  AC_MSG_ERROR([no such directory $mysql_incdir])
+  fi  
 
 
-  AC_ARG_WITH([mysql-lib-path],
-              [--with-mysql-lib-path  path to mysql libraries],
-              [MYSQL_LIBS="-L$withval -lmysqlclient"],
-              [MYSQL_LIBS='-L/usr/lib64/mysql -L/usr/lib/mysql -lmysqlclient'])
+  AC_MSG_CHECKING([for MySQL libdir])
+  AC_ARG_WITH(mysql-libdir,
+	            [ --with-mysql-libdir=<dir> Default is /usr/lib],
+            	MYSQL_LIBS="-L$withval -lmysqlclient", 
+              MYSQL_LIBS="-L/usr/lib64/mysql -L/usr/lib/mysql -lmysqlclient")
 
-AC_SUBST([MYSQL_CFLAGS])
-AC_SUBST([MYSQL_LIBS])
+
+  AC_SUBST(MYSQL_CFLAGS)
+  AC_SUBST(MYSQL_LIBS)
 ])
