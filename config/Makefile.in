@@ -36,11 +36,6 @@ subdir = config
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/project/glite.m4 \
-	$(top_srcdir)/project/libtool.m4 \
-	$(top_srcdir)/project/ltoptions.m4 \
-	$(top_srcdir)/project/ltsugar.m4 \
-	$(top_srcdir)/project/ltversion.m4 \
-	$(top_srcdir)/project/lt~obsolete.m4 \
 	$(top_srcdir)/project/mysql.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -108,7 +103,6 @@ MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
 MYSQL_CFLAGS = @MYSQL_CFLAGS@
-MYSQL_INSTALL_PATH = @MYSQL_INSTALL_PATH@
 MYSQL_LIBS = @MYSQL_LIBS@
 NM = @NM@
 NMEDIT = @NMEDIT@
@@ -123,7 +117,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PMYSQL = @PMYSQL@
 POW_LIB = @POW_LIB@
 PPREFIX = @PPREFIX@
 RANLIB = @RANLIB@
@@ -182,7 +175,7 @@ psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
-sysconfdir = $(prefix)/etc/voms
+sysconfdir = $(prefix)/share/voms
 target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
