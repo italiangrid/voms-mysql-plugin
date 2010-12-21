@@ -302,6 +302,7 @@ myinterface::myinterface() : dbname(NULL),
                              stmt_get_group_and_role_attributes(NULL),
                              stmt_get_group_and_role_attributes_all(NULL),
                              stmt_get_version(NULL),
+                             stmt_get_suspension_reason(NULL),
                              insecure(false),
                              dbVersion(1),
                              socket(NULL)
@@ -708,6 +709,12 @@ bool myinterface::registerQueries(void)
    stmt_get_uid_v1_insecure = registerQuery(
      "SELECT userid FROM usr WHERE usr.dn = ?"));
 
+  if (dbVersion == 3) 
+    (insecure ? 
+     stmt_get_suspension_reason = registerQuery("SELECT suspended_reason FROM certificate WHERE subject_string = ? AND suspended != 0") :
+     stmt_get_suspension_reason = registerQuery("SELECT suspended_reason FROM certificate WHERE subject_string = ? AND ca_id = ? AND suspended != 0"));
+
+
   if (!stmt_get_role ||
       !stmt_get_groups ||
       !stmt_get_groups_and_role ||
@@ -719,7 +726,12 @@ bool myinterface::registerQueries(void)
       !stmt_get_group_attributes ||
       !stmt_get_role_attributes ||
       !stmt_get_group_and_role_attributes ||
+      (dbVersion == 3 && !stmt_get_suspension_reason) ||
       !stmt_get_group_and_role_attributes_all) {
+
+    if (stmt_get_suspension_reason)
+      mysql_stmt_close(stmt_get_suspension_reason);
+
     if (stmt_get_role)
       mysql_stmt_close(stmt_get_role);
       
@@ -968,17 +980,80 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
 
     result = executeQuery(stmt, parameter, res, 1);
 
-    if (!result) {
-      setError(ERR_USER_UNKNOWN, "USER is unregistered");
-      return -1;
-    }
+    if (!result)
+      goto suspendederr;
   }
-  if (mysql_stmt_fetch(stmt)) {
-      setError(ERR_USER_UNKNOWN, "USER is unregistered");
-      return -1;
-  }
+  if (mysql_stmt_fetch(stmt))
+    goto suspendederr;
 
   return uid;
+
+suspendederr:
+  /* Determine if it was suspended */
+  {
+
+    MYSQL_BIND parameter[2];
+    memset(parameter, 0, sizeof(parameter));
+
+    if (!insecure) {
+      parameter[0].buffer = (void*)dn.c_str();
+      parameter[0].buffer_length = dn.size();
+      parameter[0].buffer_type = MYSQL_TYPE_STRING;
+      parameter[0].is_null = 0;
+
+      parameter[1].buffer = (char*)&cid;
+      parameter[1].buffer_length = 0;
+      parameter[1].buffer_type = MYSQL_TYPE_LONG;
+      parameter[1].is_null = 0;
+    } else {
+      parameter[0].buffer = (void*)dn.c_str();
+      parameter[0].buffer_length = dn.size();
+      parameter[0].buffer_type = MYSQL_TYPE_STRING;
+      parameter[0].is_null = 0;
+    }
+
+    MYSQL_BIND res[1];
+    my_bool is_null[1];
+    unsigned long int len[1];
+
+    memset(res, 0, sizeof(res));
+    memset(&(res[0]), 0, sizeof(res[0]));
+
+    res[0].buffer = 0;
+    res[0].buffer_type = MYSQL_TYPE_STRING;
+    res[0].buffer_length = 0;
+    res[0].is_null = &(is_null[0]);
+    res[0].length = &(len[0]);
+
+    stmt = stmt_get_suspension_reason;
+
+    if (!executeQuery(stmt, parameter, res, 1)) {
+      dn = translate(dn);
+
+      parameter[0].buffer = (void*)dn.c_str();
+      parameter[0].buffer_length = dn.size();
+      parameter[0].buffer_type = MYSQL_TYPE_STRING;
+      parameter[0].is_null = 0;
+
+      if (!executeQuery(stmt, parameter, res, 1)) {
+        setError(ERR_USER_UNKNOWN, "USER is unregistered");
+        return uid;
+      }
+    }
+
+    unsigned long numberOfRows = (unsigned long)mysql_stmt_num_rows(stmt);
+
+    if (numberOfRows == 1) {
+      mysql_stmt_fetch(stmt);
+      mysql_stmt_fetch_column(stmt, &(res[0]), 0, 0);
+      if (!is_null[0])
+        setError(ERR_USER_SUSPENDED, std::string((char *)(res[0].buffer), (std::string::size_type)(*(res[0].length))));
+      else
+        setError(ERR_USER_SUSPENDED, "Reason unknown");
+    }
+    free(res[0].buffer);
+    return -1;
+  }
 }
 
 signed long int myinterface::getUIDASCII_v1(X509 *cert)

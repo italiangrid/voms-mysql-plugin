@@ -111,6 +111,7 @@ private:
   MYSQL_STMT *stmt_get_group_and_role_attributes;
   MYSQL_STMT *stmt_get_group_and_role_attributes_all;
   MYSQL_STMT *stmt_get_version;
+  MYSQL_STMT *stmt_get_suspension_reason;
 
   bool insecure;
   int dbVersion;
