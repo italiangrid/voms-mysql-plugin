@@ -78,7 +78,7 @@ class interface
 public:
   virtual ~interface(void) {};
   virtual int error(void) const = 0;
-  virtual bool connect(const char *, const char *, const char *, const char *) = 0;
+  virtual bool connect(const char * dbname, const char * hostname, const char * user, const char * password) = 0;
   virtual bool reconnect() = 0;
   virtual void close(void) = 0;
   virtual bool setOption(int option, void *value) = 0;

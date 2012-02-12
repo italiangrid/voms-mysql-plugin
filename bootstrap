@@ -1,8 +1,0 @@
-
-mkdir -p src/autogen
-set -x
-aclocal -I project
-libtoolize --force
-autoheader
-automake --foreign --copy
-autoconf

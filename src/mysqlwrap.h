@@ -29,8 +29,8 @@
 #include <vector>
 
 extern "C" {
-#include <mysql.h>
-#include <mysqld_error.h>
+#include <mysql/mysql.h>
+#include <mysql/mysqld_error.h>
 #include <openssl/x509.h>
 }
 
