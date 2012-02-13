@@ -1,6 +1,6 @@
 
-sysconfdir = $(prefix)/share/voms
-sysconf_DATA = voms-mysql.data voms-mysql-compat.data
+dbconfdir = $(datadir)/voms
+dbconf_DATA = voms-mysql.data voms-mysql-compat.data
 
 EXTRA_DIST = voms-mysql.data voms-mysql-compat.data
 
