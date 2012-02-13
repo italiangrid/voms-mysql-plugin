@@ -1,11 +1,11 @@
 Name:		voms-mysql-plugin
-Version:	3.1.5.1
+Version:	3.1.6.1
 Release:	1%{?dist}
 Summary:	VOMS server plugin for MySQL
 
 Group:		System Environment/Libraries
 License:	ASL 2.0
-URL:		http://glite.web.cern.ch/glite/
+URL:		https://wiki.italiangrid.it/twiki/bin/view/VOMS
 Source:		%{name}-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -17,17 +17,18 @@ BuildRequires:	mysql-devel%{?_isa}
 BuildRequires:	openssl%{?_isa}
 
 %description
-In grid computing, and whenever the access to resources may be controlled
-by parties external to the resource provider, users may be grouped to
-Virtual Organizations (VOs). This package provides a VO Membership Service
-(VOMS), which informs on that association between users and their VOs:
-groups, roles and capabilities.
+The Virtual Organization Membership Service (VOMS) is an attribute authority
+which serves as central repository for VO user authorization information,
+providing support for sorting users into group hierarchies, keeping track of
+their roles and other attributes in order to issue trusted attribute
+certificates and SAML assertions used in the Grid environment for
+authorization purposes.
 
 This package offers the MySQL implementation for the VOMS server.
 
 %prep
 %setup -q
-./bootstrap
+./autogen.sh
 
 %build
 %configure --libdir=%{_libdir}/voms
@@ -51,6 +52,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/voms/libvomsmysql.so
 
 %changelog
+* Tue May 31 2011 Andrea Ceccanti <andrea.ceccanti@cnaf.infn.it> - 3.1.6.1-1
+- Update to version 3.1.6.1
+
 * Tue May 31 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 3.1.5.1-1
 - Update to version 3.1.5.1
 
