@@ -1,5 +1,6 @@
 SUBDIRS = config src 
 ACLOCAL_AMFLAGS = -I m4
+EXTRA_DIST = autogen.sh LICENSE
 
 rpmbuild_dir=@WORKDIR@/rpmbuild
 debbuild_dir=@WORKDIR@/debbuild

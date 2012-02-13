@@ -1,5 +1,5 @@
 Name:		voms-mysql-plugin
-Version:	3.1.6.1
+Version:	3.1.6
 Release:	1%{?dist}
 Summary:	VOMS server plugin for MySQL
 
@@ -31,15 +31,15 @@ This package offers the MySQL implementation for the VOMS server.
 ./autogen.sh
 
 %build
-%configure --libdir=%{_libdir}/voms
+%configure 
 make %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 
-rm $RPM_BUILD_ROOT%{_libdir}/voms/libvomsmysql.a
-rm $RPM_BUILD_ROOT%{_libdir}/voms/libvomsmysql.la
+rm $RPM_BUILD_ROOT%{_libdir}/libvomsmysql.a
+rm $RPM_BUILD_ROOT%{_libdir}/libvomsmysql.la
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -48,12 +48,11 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %{_datadir}/voms/voms-mysql.data
 %{_datadir}/voms/voms-mysql-compat.data
-%dir %{_libdir}/voms
-%{_libdir}/voms/libvomsmysql.so
+%{_libdir}/libvomsmysql.so
 
 %changelog
-* Tue May 31 2011 Andrea Ceccanti <andrea.ceccanti@cnaf.infn.it> - 3.1.6.1-1
-- Update to version 3.1.6.1
+* Tue May 31 2011 Andrea Ceccanti <andrea.ceccanti@cnaf.infn.it> - 3.1.6-1
+- Update to version 3.1.6
 
 * Tue May 31 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 3.1.5.1-1
 - Update to version 3.1.5.1

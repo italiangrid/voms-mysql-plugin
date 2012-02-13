@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([VOMS MySQL connector], [3.1.6])
+AC_INIT([VOMS MySQL plugin], [3.1.6])
 AC_PREREQ(2.57)
 AC_PREFIX_DEFAULT("/")
 AC_CONFIG_AUX_DIR([./aux])
