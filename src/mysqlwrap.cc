@@ -53,11 +53,16 @@ namespace bsq {
 
 sqliface::interface *myinterface::getSession()
 {
+  if (isconnected == false)
+      reconnect();
   return this;
 }
 
-  void myinterface::releaseSession(sqliface::interface *face)
+void myinterface::releaseSession(sqliface::interface *face)
 {
+    if (mysql) mysql_close(mysql);
+    mysql = NULL;
+    isconnected = false;
 }
 
 char *myinterface::errorMessage(void)
@@ -888,12 +893,16 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
   std::string dn = std::string(dnname);
   std::string::size_type pos = 0;
 
+  // Why the hell is he doing this?? 
+
+  /*
   while((pos = ca.find_first_of("'", pos+3)) != std::string::npos)
     ca.insert(pos, "'");
 
   pos = 0;
   while((pos = dn.find_first_of("'", pos+3)) != std::string::npos)
     dn.insert(pos, "'");
+  */
 
   OPENSSL_free(caname);
   OPENSSL_free(dnname);
