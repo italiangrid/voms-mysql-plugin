@@ -98,7 +98,7 @@ bool myinterface::operation(int operation, void *result, ...)
   std::vector<std::string> *fqans = ((std::vector<std::string> *)result);
   std::vector<gattrib> *attrs = ((std::vector<gattrib> *)result);
   X509 *cert = NULL;
-  signed long int uid = -1;
+  long long uid = -1;
   char *group = NULL;
   char *role = NULL;
 
@@ -107,7 +107,7 @@ bool myinterface::operation(int operation, void *result, ...)
   switch(operation) {
   case OPERATION_GET_GROUPS_AND_ROLE:
   case OPERATION_GET_GROUPS_AND_ROLE_ATTRIBS:
-    uid = va_arg(va, signed long int);
+    uid = va_arg(va, long long );
     group = va_arg(va, char *);
     role = va_arg(va, char *);
     if (uid == -1 || !group || !role)
@@ -116,7 +116,7 @@ bool myinterface::operation(int operation, void *result, ...)
 
   case OPERATION_GET_ROLE:
   case OPERATION_GET_ROLE_ATTRIBS:
-    uid = va_arg(va, signed long int);
+    uid = va_arg(va, long long);
     role = va_arg(va, char *);
     if (uid == -1 || !role)
       error = true;
@@ -126,7 +126,7 @@ bool myinterface::operation(int operation, void *result, ...)
   case OPERATION_GET_ALL:
   case OPERATION_GET_GROUPS_ATTRIBS:
   case OPERATION_GET_ALL_ATTRIBS:
-    uid = va_arg(va, signed long int);
+    uid = va_arg(va, long long);
     if (uid == -1)
       error = true;
     break;
@@ -162,8 +162,8 @@ bool myinterface::operation(int operation, void *result, ...)
 
     case OPERATION_GET_USER:
       {
-        signed long int res = getUID(cert);
-        *((signed long int *)result) = res;
+        long long res = getUID(cert);
+        *((long long *)result) = res;
         if (res == -1)
           return false;
         return true;
@@ -431,7 +431,7 @@ bool myinterface::executeQuery(MYSQL_STMT *stmt, MYSQL_BIND *parameters,
   return true;
 }
 
-bool myinterface::operationGetRole(signed long int uid, char *role, std::vector<std::string> &fqans)
+bool myinterface::operationGetRole(long long uid, char *role, std::vector<std::string> &fqans)
 {
   MYSQL_BIND arguments[2];
 
@@ -442,7 +442,7 @@ bool myinterface::operationGetRole(signed long int uid, char *role, std::vector<
   arguments[0].is_null = 0;
   arguments[0].length = &size;
 
-  arguments[1].buffer_type = MYSQL_TYPE_LONG;
+  arguments[1].buffer_type = MYSQL_TYPE_LONGLONG;
   arguments[1].buffer = (char *)&uid;
   arguments[1].is_null = 0;
   arguments[1].length = 0;
@@ -450,11 +450,11 @@ bool myinterface::operationGetRole(signed long int uid, char *role, std::vector<
   return getFQANs(stmt_get_role, arguments, fqans) && operationGetGroups(uid, fqans);
 }
 
-bool myinterface::operationGetGroups(signed long int uid, std::vector<std::string> &fqans)
+bool myinterface::operationGetGroups(long long uid, std::vector<std::string> &fqans)
 {
   MYSQL_BIND arguments[1];
 
-  arguments[0].buffer_type = MYSQL_TYPE_LONG;
+  arguments[0].buffer_type = MYSQL_TYPE_LONGLONG;
   arguments[0].buffer = (char *)&uid;
   arguments[0].is_null = 0;
   arguments[0].length = 0;
@@ -462,7 +462,7 @@ bool myinterface::operationGetGroups(signed long int uid, std::vector<std::strin
   return getFQANs(stmt_get_groups, arguments, fqans);
 }
 
-bool myinterface::operationGetGroupAndRole(signed long int uid, char *group, 
+bool myinterface::operationGetGroupAndRole(long long uid, char *group, 
                                            char *role, std::vector<std::string> &fqans)
 {
   MYSQL_BIND arguments[3];
@@ -484,7 +484,7 @@ bool myinterface::operationGetGroupAndRole(signed long int uid, char *group,
   arguments[1].is_null = 0;
   arguments[1].length = &size2;
 
-  arguments[2].buffer_type = MYSQL_TYPE_LONG;
+  arguments[2].buffer_type = MYSQL_TYPE_LONGLONG;
   arguments[2].buffer = (char *)&uid;
   arguments[2].is_null = 0;
   arguments[2].length = 0;
@@ -493,21 +493,21 @@ bool myinterface::operationGetGroupAndRole(signed long int uid, char *group,
     operationGetGroups(uid, fqans);
 }
 
-bool myinterface::operationGetAll(signed long int uid, std::vector<std::string> &fqans)
+bool myinterface::operationGetAll(long long uid, std::vector<std::string> &fqans)
 {
   MYSQL_BIND parameter[1];
 
   memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
 
   parameter[0].buffer = (char *)&uid;
-  parameter[0].buffer_type = MYSQL_TYPE_LONG;
+  parameter[0].buffer_type = MYSQL_TYPE_LONGLONG;
   parameter[0].is_null = 0;
   parameter[0].length = 0;
 
   return getFQANs(stmt_get_all, parameter, fqans);
 }
 
-bool myinterface::operationGetGroupAndRoleAttribs(signed long int uid, char *group,
+bool myinterface::operationGetGroupAndRoleAttribs(long long uid, char *group,
                                                   char *role,
                                                   std::vector<gattrib> &attrs)
 {
@@ -526,7 +526,7 @@ bool myinterface::operationGetGroupAndRoleAttribs(signed long int uid, char *gro
   memset(&(parameter[2]), 0, sizeof(MYSQL_BIND));
 
   parameter[0].buffer = (char *)&uid;
-  parameter[0].buffer_type = MYSQL_TYPE_LONG;
+  parameter[0].buffer_type = MYSQL_TYPE_LONGLONG;
   parameter[0].is_null = 0;
   parameter[0].length = 0;
   parameter[1].buffer = role;
@@ -545,7 +545,7 @@ bool myinterface::operationGetGroupAndRoleAttribs(signed long int uid, char *gro
     getAttributes(stmt_get_group_and_role_attributes, parameter, attrs);
 }
 
-bool myinterface::operationGetGroupAttribs(signed long int uid,
+bool myinterface::operationGetGroupAttribs(long long uid,
                                            std::vector<gattrib> &attrs)
 {
   MYSQL_BIND parameter[1];
@@ -553,7 +553,7 @@ bool myinterface::operationGetGroupAttribs(signed long int uid,
   memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
 
   parameter[0].buffer = (char *)&uid;
-  parameter[0].buffer_type = MYSQL_TYPE_LONG;
+  parameter[0].buffer_type = MYSQL_TYPE_LONGLONG;
   parameter[0].is_null = 0;
   parameter[0].length = 0;
 
@@ -563,7 +563,7 @@ bool myinterface::operationGetGroupAttribs(signed long int uid,
     getAttributes(stmt_get_group_attributes, parameter, attrs);
 }
 
-bool myinterface::operationGetRoleAttribs(signed long int uid, char *role,
+bool myinterface::operationGetRoleAttribs(long long uid, char *role,
                                            std::vector<gattrib> &attrs)
 {
   MYSQL_BIND parameter[2];
@@ -577,7 +577,7 @@ bool myinterface::operationGetRoleAttribs(signed long int uid, char *role,
   parameter[0].is_null = 0;
   parameter[0].length = &sizerole;
   parameter[1].buffer = (char *)&uid;
-  parameter[1].buffer_type = MYSQL_TYPE_LONG;
+  parameter[1].buffer_type = MYSQL_TYPE_LONGLONG;
   parameter[1].is_null = 0;
   parameter[1].length = 0;
 
@@ -588,7 +588,7 @@ bool myinterface::operationGetRoleAttribs(signed long int uid, char *role,
 }
 
 
-bool myinterface::operationGetAllAttribs(signed long int uid,
+bool myinterface::operationGetAllAttribs(long long uid,
                                          std::vector<gattrib> &attrs)
 {
   MYSQL_BIND parameter[1];
@@ -596,7 +596,7 @@ bool myinterface::operationGetAllAttribs(signed long int uid,
   memset(&(parameter[0]), 0, sizeof(MYSQL_BIND));
 
   parameter[0].buffer = (char *)&uid;
-  parameter[0].buffer_type = MYSQL_TYPE_LONG;
+  parameter[0].buffer_type = MYSQL_TYPE_LONGLONG;
   parameter[0].is_null = 0;
   parameter[0].length = 0;
 
@@ -877,7 +877,7 @@ bool myinterface::bindAndSetSize(MYSQL_STMT *stmt, MYSQL_BIND *outputs, int size
   return true;
 }
 
-signed long int myinterface::getUIDASCII_v2(X509 *cert)
+long long myinterface::getUIDASCII_v2(X509 *cert)
 {
   char *caname = X509_NAME_oneline(X509_get_issuer_name(cert), NULL, 0);
   char *dnname = X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0);
@@ -892,17 +892,6 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
   std::string ca = std::string(caname);
   std::string dn = std::string(dnname);
   std::string::size_type pos = 0;
-
-  // Why the hell is he doing this?? 
-
-  /*
-  while((pos = ca.find_first_of("'", pos+3)) != std::string::npos)
-    ca.insert(pos, "'");
-
-  pos = 0;
-  while((pos = dn.find_first_of("'", pos+3)) != std::string::npos)
-    dn.insert(pos, "'");
-  */
 
   OPENSSL_free(caname);
   OPENSSL_free(dnname);
@@ -972,10 +961,11 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
     stmt = stmt_get_uid_v1;
 
   MYSQL_BIND res[1];
-  signed long int uid = -1;
+
+  long long uid = -1;
   memset(res, 0, sizeof(res));
   res[0].buffer = (void*)&uid;
-  res[0].buffer_type = MYSQL_TYPE_LONG;
+  res[0].buffer_type = MYSQL_TYPE_LONGLONG;
 
   result = executeQuery(stmt, parameter, res, 1);
 
@@ -994,6 +984,7 @@ signed long int myinterface::getUIDASCII_v2(X509 *cert)
   }
   if (mysql_stmt_fetch(stmt))
     goto suspendederr;
+
 
   return uid;
 
@@ -1065,7 +1056,7 @@ suspendederr:
   }
 }
 
-signed long int myinterface::getUIDASCII_v1(X509 *cert)
+long long myinterface::getUIDASCII_v1(X509 *cert)
 {
   char *caname = X509_NAME_oneline(X509_get_issuer_name(cert), NULL, 0);
   char *dnname = X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0);
@@ -1178,7 +1169,7 @@ bool myinterface::isConnected(void)
   return isconnected;
 }
 
-signed long int myinterface::getUID(X509 *certificate)
+long long myinterface::getUID(X509 *certificate)
 {
   if (!certificate) {
     setError(ERR_NO_IDDATA, "No Identifying data passed.");
@@ -1190,7 +1181,8 @@ signed long int myinterface::getUID(X509 *certificate)
     return -1;
   }
 
-  signed long int uid = -1;
+  // We need 64 bits
+  long long uid = -1;
 
   if (dbVersion == 3 ) {
     uid = getUIDASCII_v2(certificate);
