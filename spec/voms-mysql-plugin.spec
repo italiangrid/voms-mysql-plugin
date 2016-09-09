@@ -1,6 +1,6 @@
 Name:		voms-mysql-plugin
 Version:	3.1.7
-Release:	0%{?dist}
+Release:	1%{?dist}
 Summary:	VOMS server plugin for MySQL
 
 Group:		System Environment/Libraries
