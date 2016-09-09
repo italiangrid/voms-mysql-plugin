@@ -61,15 +61,15 @@ public:
   void releaseSession(sqliface::interface *);
 
 private:
-  bool operationGetAll         (signed long int, std::vector<std::string>&);
-  bool operationGetRole        (signed long int, char *role, std::vector<std::string>&);
-  bool operationGetGroups      (signed long int, std::vector<std::string>&);
-  bool operationGetGroupAndRole(signed long int, char *group, char *role, std::vector<std::string>&);
+  bool operationGetAll         (long long, std::vector<std::string>&);
+  bool operationGetRole        (long long, char *role, std::vector<std::string>&);
+  bool operationGetGroups      (long long, std::vector<std::string>&);
+  bool operationGetGroupAndRole(long long, char *group, char *role, std::vector<std::string>&);
 
-  bool operationGetAllAttribs         (signed long int, std::vector<gattrib>&);
-  bool operationGetRoleAttribs        (signed long int, char *role, std::vector<gattrib>&);
-  bool operationGetGroupAttribs       (signed long int, std::vector<gattrib>&);
-  bool operationGetGroupAndRoleAttribs(signed long int, char *group, char *role, std::vector<gattrib>&);
+  bool operationGetAllAttribs         (long long, std::vector<gattrib>&);
+  bool operationGetRoleAttribs        (long long, char *role, std::vector<gattrib>&);
+  bool operationGetGroupAttribs       (long long, std::vector<gattrib>&);
+  bool operationGetGroupAndRoleAttribs(long long, char *group, char *role, std::vector<gattrib>&);
   int  operationGetVersion(void);
 
   void setError(int code, const std::string &message);
@@ -78,9 +78,9 @@ private:
   bool registerQueries(void);
   bool getFQANs(MYSQL_STMT *, MYSQL_BIND *, std::vector<std::string>&);
   bool  bindAndSetSize(MYSQL_STMT *, MYSQL_BIND *, int);
-  signed long int getUIDASCII_v2(X509 *);
-  signed long int getUIDASCII_v1(X509 *);
-  signed long int getUID(X509 *);
+  long long getUIDASCII_v2(X509 *);
+  long long getUIDASCII_v1(X509 *);
+  long long getUID(X509 *);
   bool getAttributes(MYSQL_STMT *, MYSQL_BIND *, std::vector<gattrib>&);
   void clearError();
   int getVersion();

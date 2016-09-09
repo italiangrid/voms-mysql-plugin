@@ -1,5 +1,5 @@
 Name:		voms-mysql-plugin
-Version:	3.1.6
+Version:	3.1.7
 Release:	1%{?dist}
 Summary:	VOMS server plugin for MySQL
 
@@ -51,6 +51,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libvomsmysql.so
 
 %changelog
+* Fri Aug 26 2016 Andrea Ceccanti <andrea.ceccanti@cnaf.infn.it> - 3.1.7-0
+- Update to version 3.1.7
+
 * Tue May 31 2011 Andrea Ceccanti <andrea.ceccanti@cnaf.infn.it> - 3.1.6-1
 - Update to version 3.1.6
 
